@@ -1,0 +1,160 @@
+#Importing  Libraries
+import pandas as pd
+import os
+import pyodbc as odbc
+import matplotlib.pyplot as plt
+
+# Checking available ODBC drivers
+print(odbc.drivers())
+
+# Checking available ODBC drivers
+print(odbc.drivers())
+
+# tables
+csv_files = [("order_details.csv", "order_details"),
+             ("orders.csv", "orders"),
+             ("pizza_types.csv", "pizza_types"),
+             ("pizzas.csv", "pizzas")]
+
+path  = "C:\\Users\\Tag2tech\\Desktop\\data science\\pizza sales\\pizza"
+
+# Lists to hold file paths, names, and dataframes
+files = []
+names = []
+dfs = []
+
+for file, name in csv_files:
+    files.append(os.path.join(path, file))
+    names.append(name)
+
+for file in files:
+    dfs.append(pd.read_csv(file, encoding='latin-1'))
+# Reading first table
+print(f"Table: {names[0]}")
+dfs[0].head(2)  
+
+# Inspect first table
+print(f"Table: {names[0]}")
+dfs[0].info()  
+
+# Check Statisticsl Information
+print(f"Table: {names[0]}")
+dfs[0].describe(include = "all")
+
+# Value counts of pizza_id in order_details
+dfs[0]["pizza_id"].value_counts()
+
+# Checking for duplicates
+print(f"Table: {names[0]}")
+dfs[0].duplicated().sum()
+
+# Reading second table
+print(f"Table: {names[1]}")
+dfs[1].head(2)
+
+# Inpesting table 2
+print(f"Table: {names[1]}")
+dfs[1].info()
+
+# Convert order_date to date tyme datatype
+dfs[1]['order_date'] = pd.to_datetime(dfs[1]['order_date'], errors = "coerce")
+# Convert order_time to time datatype   
+dfs[1]["order_time"] = pd.to_datetime(dfs[1]["order_time"], format = "%H:%M:%S")
+# Check Statisticsl Information
+dfs[1].describe(include = "all")
+
+# Checking for duplicates
+dfs[1].duplicated().sum()
+
+# Read third table
+print(f"Table: {names[2]}")
+dfs[2]["total_ingredients"] = [len(ingredients.split(",")) for ingredients in dfs[2]["ingredients"]]
+dfs[2].head()
+
+# renaming column name
+dfs[2].rename(columns = {"name": "pizza_name"}, inplace = True)
+
+# Checking the Statistical Information
+dfs[2].describe(include = "all")
+
+# Checking for duplicates
+dfs[2].duplicated().sum()
+
+# Checking ingredient distribution
+plt.bar(dfs[2]['category'], dfs[2]["total_ingredients"], color = "red")
+plt.title("The Distribution of Ingrdients across pizza categories")
+plt.xlabel("Pizza Category")
+plt.ylabel("Total")
+
+# reading last table
+print(f'Table: {names[3]}')
+dfs[3].head(2)
+# inspecting last table
+print(f'Table: {names[3]}')
+dfs[3].info()
+
+# Checking duplicates
+dfs[2].duplicated().sum()
+
+# Setting up sql server environment
+driver = 'SQL Server'
+server = 'Muchmore\SQLEXPRESS01'
+db = 'PIZZA'
+
+# Create connection string
+def connection(driver, server, database):
+    conn_str = (
+        f"DRIVER={{{driver}}};"
+        f"SERVER={server};"
+        f"DATABASE={database};"
+        "Trusted_Connection=yes;"
+    )
+    return conn_str
+
+# Create database connection object
+try:
+    conn = odbc.connect(connection(driver, server, db))
+    print("Database connection established.")
+
+except odbc.DatabaseError as e:
+    print(f"Database Error:\n{str(e)}")
+except odbc.Error as e:
+    print(f"Connection Error:\n{str(e)}")
+
+
+# Loading data into SQL
+cursor = conn.cursor()
+
+for df, table_name in zip(dfs, names):
+    placeholders = ",".join(["?"] * len(df.columns))
+    columns = ",".join([f"[{col}]" for col in df.columns])
+
+    sql = f"""
+    INSERT INTO {table_name} ({columns})
+    VALUES ({placeholders})
+    """
+
+    try:
+        for _, row in df.iterrows():
+            cursor.execute(sql, tuple(row))
+        conn.commit()
+        print(f"Successfully inserted data into {table_name}")
+    except Exception as e:
+        print(f"Error inserting data into {table_name}: {str(e)}")
+        conn.rollback()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

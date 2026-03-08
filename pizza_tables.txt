@@ -1,0 +1,38 @@
+--- CREATE DATABASE PIZZA
+USE PIZZA
+
+IF OBJECT_ID ('order_details') IS NOT NULL
+  DROP TABLE order_details
+CREATE TABLE order_details (
+                            order_details_id INT,
+                            order_id INT,
+			    pizza_id VARCHAR(20),
+			    quantity INT
+                            )
+
+IF OBJECT_ID ('orders') IS NOT NULL
+  DROP TABLE orders
+CREATE TABLE orders (
+                      order_id INT,
+                      order_date DATETIME,
+		      order_time DATETIME
+		    )
+
+IF OBJECT_ID ('pizza_types') IS NOT NULL
+  DROP TABLE pizza_types
+CREATE TABLE pizza_types (
+                           pizza_type_id VARCHAR(15),
+                           pizza_name VARCHAR(70),
+			   category VARCHAR(20),
+			   ingredients VARCHAR(150),
+			   total_ingredients INT
+			  )
+
+IF OBJECT_ID ('pizzas') IS NOT NULL
+  DROP TABLE pizzas
+CREATE TABLE pizzas (
+                      pizza_id VARCHAR(15),
+		      pizza_type_id VARCHAR(15),
+		      size VARCHAR(5),
+                      price FLOAT
+		    )
